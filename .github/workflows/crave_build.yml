@@ -15,18 +15,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 'stable'
-
-      - name: Install Crave CLI
+      - name: Install Crave CLI (Fixed Path)
         run: |
-          mkdir -p $HOME/bin
-          curl -sL https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s -- $HOME/bin
-          echo "$HOME/bin" >> $GITHUB_PATH
+          # Official Crave Binary ကို ဒေါင်းလုဒ်ဆွဲပြီး Global Path ထဲ တိုက်ရိုက်ထည့်ခြင်း
+          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
+          chmod +x crave
+          sudo mv crave /usr/local/bin/crave
 
-      - name: Configure Crave
+      - name: Configure Crave Credentials
         run: |
           mkdir -p $HOME/.crave
           echo '{
@@ -36,4 +32,5 @@ jobs:
 
       - name: Execute Crave Command
         run: |
-          eval "${{ github.event.inputs.command }}"
+          # ကွက်လပ်ထဲက ရိုက်ထည့်လိုက်တဲ့ Command ကို စတင် Run ခြင်း
+          ${{ github.event.inputs.command }}

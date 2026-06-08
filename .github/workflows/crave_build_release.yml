@@ -1,0 +1,66 @@
+name: Crave Builder with Auto Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Crave Target Build Commands'
+        required: true
+        default: 'crave run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast sweet && mka bacon"'
+      device_codename:
+        description: 'Device Codename (e.g., sweet, alioth, miatoll)'
+        required: true
+        default: 'sweet'
+
+jobs:
+  crave_job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # GitHub Release ဆောက်နိုင်ရန် Write Permission ပေးခြင်း
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Crave CLI
+        run: |
+          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
+          chmod +x crave
+          sudo mv crave /usr/local/bin/crave
+
+      - name: Configure Crave Credentials
+        run: |
+          mkdir -p $HOME/.crave
+          echo '{
+            "username": "${{ secrets.CRAVE_USERNAME }}",
+            "auth": "${{ secrets.CRAVE_TOKEN }}"
+          }' > $HOME/.crave/crave.conf
+
+      - name: Execute Crave Build Command
+        run: |
+          ${{ github.event.inputs.command }}
+
+      - name: Download Built ROM from Crave (Pull)
+        run: |
+          # Build ပြီးသွားသော ROM file ကို GitHub VM ထဲသို့ လှမ်းဆွဲခြင်း
+          mkdir -p signed-files
+          crave pull out/target/product/${{ github.event.inputs.device_codename }}/lineage-21.0-*.zip || true
+          
+          # ဖိုင် တကယ်ရောက်မရောက် စစ်ဆေးပြီး နေရာရွှေ့ခြင်း
+          mv out/target/product/${{ github.event.inputs.device_codename }}/*.zip ./signed-files/ || true
+          ls -la ./signed-files/
+
+      - name: Upload ROM to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ROM-Build-${{ github.run_number }}
+          name: "LineageOS 21.0 Build for ${{ github.event.inputs.device_codename }}"
+          body: |
+            ---
+            **Android Version:** 14 (LineageOS 21.0)
+            **Device Codename:** ${{ github.event.inputs.device_codename }}
+            **Build Status:** Success 🚀
+            **Build Number:** #${{ github.run_number }}
+          files: ./signed-files/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

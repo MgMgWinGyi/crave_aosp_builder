@@ -15,8 +15,8 @@ jobs:
 
       - name: Install Official Crave CLI
         run: |
-          # 1. 404 Error လုံးဝ မတက်စေရန် Crave.io ရဲ့ တရားဝင် Stable Binary ကို အတင်း တိုက်ရိုက် ဆွဲချခြင်း
-          curl -sLo crave https://github.com/accupara/crave/releases/latest/download/crave-linux-amd64 || curl -sLo crave https://github.com/accupara/crave/releases/download/0.2-7183/crave-linux-amd64.bin
+          # 1. 404 Error လုံးဝမတက်စေရန် တရားဝင် Stable Linux Binary (.bin) ဖိုင်ကို တိုက်ရိုက်ဆွဲချခြင်း
+          curl -sLo crave https://github.com/accupara/crave/releases/download/0.2-7220/crave-0.2-7220-linux-amd64.bin
           
           # 2. မောင်းနှင်ခွင့် (Permission) ပေးခြင်း
           chmod +x crave

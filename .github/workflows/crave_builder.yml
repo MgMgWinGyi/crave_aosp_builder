@@ -15,21 +15,26 @@ jobs:
 
       - name: Install Official Crave CLI
         run: |
-          # 1. 404 Error လုံးဝမတက်စေရန် တရားဝင် Stable Linux Binary (.bin) ဖိုင်ကို တိုက်ရိုက်ဆွဲချခြင်း
-          curl -sLo crave https://github.com/accupara/crave/releases/download/0.2-7220/crave-0.2-7220-linux-amd64.bin
+          # 1. Crave တရားဝင် အသုံးပြုခိုင်းထားသော ကမ္ဘာသုံး Master Script အစစ်ဖြင့် ဒေါင်းလုဒ်ဆွဲခြင်း
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           
-          # 2. မောင်းနှင်ခွင့် (Permission) ပေးခြင်း
-          chmod +x crave
+          # 2. ဒေါင်းလုဒ်ဆွဲပြီးသား crave ဖိုင် တကယ်ရှိမရှိ စစ်ဆေးပြီး လမ်းကြောင်းထဲ ပို့ဆောင်ခြင်း
+          if [ -f crave ]; then
+            chmod +x crave
+            sudo mv crave /usr/local/bin/crave
+          else
+            echo "Direct Binary Fallback..."
+            curl -sLo crave https://github.com/accupara/crave/releases/download/0.2-7183/crave-0.2-7183-linux-amd64.bin
+            chmod +x crave
+            sudo mv crave /usr/local/bin/crave
+          fi
           
-          # 3. စနစ်တစ်ခုလုံး ဘယ်နေရာကမဆို ခေါ်သုံးနိုင်အောင် ရွှေ့ပြောင်းခြင်း
-          sudo mv crave /usr/local/bin/crave
-          
-          # 4. ဗားရှင်း မှန်မှန်ကန်ကန် ထွက်မထွက် ချက်ချင်း စစ်ဆေးခြင်း
+          # 3. ဗားရှင်း အောင်မြင်စွာ ပြသနိုင်ခြင်း ရှိမရှိ စစ်ဆေးခြင်း
           crave version
 
       - name: Configure Crave Credentials
         run: |
-          # 5. Config ဖိုင် တည်ဆောက်ခြင်း
+          # 4. Config ဖိုင် တည်ဆောက်ခြင်း
           mkdir -p /home/runner/.crave
           cat << 'EOF' > /home/runner/.crave/crave.conf
           {
@@ -40,7 +45,7 @@ jobs:
 
       - name: Execute Crave Build Command
         run: |
-          # 6. သတ်မှတ်ချက်အတိုင်း ROM စတင် Build ခြင်း
+          # 5. သတ်မှတ်ချက်အတိုင်း ROM စတင် Build ခြင်း
           crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
 
       - name: Download Built ROM from Crave (Pull)

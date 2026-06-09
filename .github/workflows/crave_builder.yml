@@ -1,0 +1,63 @@
+name: Crave Builder Android 10 with Auto Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Crave Target Build Commands'
+        required: true
+        default: 'crave run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"'
+      device_codename:
+        description: 'Device Codename'
+        required: true
+        default: 'lavender'
+
+jobs:
+  crave_job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Crave CLI
+        run: |
+          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
+          chmod +x crave
+          sudo mv crave /usr/local/bin/crave
+
+      - name: Configure Crave Credentials
+        run: |
+          mkdir -p $HOME/.crave
+          echo '{
+            "username": "${{ secrets.CRAVE_USERNAME }}",
+            "auth": "${{ secrets.CRAVE_TOKEN }}"
+          }' > $HOME/.crave/crave.conf
+
+      - name: Execute Crave Build Command
+        run: |
+          ${{ github.event.inputs.command }}
+
+      - name: Download Built ROM from Crave (Pull)
+        run: |
+          mkdir -p signed-files
+          crave pull out/target/product/${{ github.event.inputs.device_codename }}/lineage-17.1-*.zip || crave pull out/target/product/${{ github.event.inputs.device_codename }}/*.zip || true
+          mv out/target/product/${{ github.event.inputs.device_codename }}/*.zip ./signed-files/ || true
+          ls -la ./signed-files/
+
+      - name: Upload ROM to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: lavender-Q-${{ github.run_number }}
+          name: "LineageOS 17.1 for Redmi Note 7 (lavender)"
+          body: |
+            ---
+            **Android Version:** 10 (Q)
+            **Device Codename:** ${{ github.event.inputs.device_codename }}
+            **Developer Account:** MgMgWinGyi
+            **Build Status:** Success 🚀
+          files: ./signed-files/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

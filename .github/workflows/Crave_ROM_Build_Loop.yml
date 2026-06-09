@@ -1,0 +1,70 @@
+name: Crave ROM Builder(Loop_Auto-Retry Mode)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure Crave Credentials
+        run: |
+          mkdir -p /home/runner/.crave
+          mkdir -p ./.crave
+          cat << 'EOF' > /home/runner/.crave/crave.conf
+          {
+            "username": "${{ secrets.CRAVE_USERNAME }}",
+            "auth": "${{ secrets.CRAVE_TOKEN }}"
+          }
+          EOF
+          cp /home/runner/.crave/crave.conf ./.crave/crave.conf
+
+      - name: Install Official Crave CLI
+        run: |
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          if [ -f crave ]; then
+            chmod +x crave
+            sudo mv crave /usr/local/bin/crave
+          fi
+
+      - name: Execute Crave Build Command (With Auto-Retry)
+        run: |
+          # ဆာဗာ အလုပ်ရှုပ်နေပါက အကြိမ်ရေ ၂၀ အထိ ၁ မိနစ်စီခြားပြီး အလိုအလျောက် ထပ်ခါထပ်ခါ ချိတ်ဆက်ခိုင်းခြင်း
+          echo "=== Starting Crave Build with Loop Connection ==="
+          for i in {1..20}; do
+            echo "Attempt $i: Connecting to Crave Server..."
+            
+            # crave command ကို run မည်
+            crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon" && break
+            
+            echo "Server is busy or socket info missing. Retrying in 60 seconds..."
+            sleep 60
+          done
+
+      - name: Download Built ROM from Crave (Pull)
+        run: |
+          mkdir -p signed-files
+          crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/lineage-17.1-*.zip || crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/*.zip || true
+          mv out/target/product/lavender/*.zip ./signed-files/ || true
+          ls -la ./signed-files/
+
+      - name: Upload ROM to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: lavender-Q-${{ github.run_number }}
+          name: "LineageOS 17.1 for Redmi Note 7 (lavender)"
+          body: |
+            ---
+            **Android Version:** 10 (Q)
+            **Device Codename:** lavender
+            **Developer:** MgMgWinGyi
+            **Status:** Success 🚀
+          files: ./signed-files/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

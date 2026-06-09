@@ -6,7 +6,8 @@ on:
       command:
         description: 'Crave Target Build Commands'
         required: true
-        default: 'crave run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"'
+        # အောက်က စာကြောင်းမှာ crave run ရဲ့ နောက်မှာ --project နာမည် တိုးပေးထားတာကို သတိပြုပါ
+        default: 'crave run --project "LineageOS-17.1-Lavender_MgWin" -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"'
       device_codename:
         description: 'Device Codename'
         required: true
@@ -31,11 +32,13 @@ jobs:
       - name: Configure Crave Credentials
         run: |
           mkdir -p $HOME/.crave
-          echo '{
+          cat <<EOF > $HOME/.crave/crave.conf
+          {
             "username": "${{ secrets.CRAVE_USERNAME }}",
             "auth": "${{ secrets.CRAVE_TOKEN }}",
-            "name": "MgMgWin" 
-          }' > $HOME/.crave/crave.conf
+            "name": "MgMgWinGyi"
+          }
+          EOF
 
       - name: Execute Crave Build Command
         run: |

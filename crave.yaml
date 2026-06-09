@@ -1,0 +1,14 @@
+# Crave AOSP Builder Configuration for Redmi Note 7 (lavender)
+# Username: MgMgWinGyi | Target ROM: Android 10 (LineageOS 17.1) - Fixed Vendor
+
+local_manifests:
+  - name: roomservice.xml
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <manifest>
+        <project path="device/xiaomi/lavender" name="MgMgWinGyi/android_device_xiaomi_lavender" remote="github" revision="lineage-17.1" />
+        
+        <project path="kernel/xiaomi/lavender" name="MgMgWinGyi/android_kernel_xiaomi_sdm660" remote="github" revision="lineage-17.1" />
+        
+        <project path="vendor/xiaomi" name="MgMgWinGyi/proprietary_vendor_xiaomi" remote="github" revision="lineage-17.1" />
+      </manifest>

@@ -1,0 +1,57 @@
+name: Latest_Full ROM Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure Crave Credentials
+        run: |
+          mkdir -p /home/runner/.crave
+          cat << 'EOF' > /home/runner/.crave/crave.conf
+          {
+            "username": "${{ secrets.CRAVE_USERNAME }}",
+            "auth": "${{ secrets.CRAVE_TOKEN }}"
+          }
+          EOF
+
+      - name: Install Crave CLI
+        run: |
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          if [ -f crave ]; then
+            chmod +x crave
+            sudo mv crave /usr/local/bin/crave
+          fi
+
+      - name: Start ROM Build
+        run: |
+          # 1. Initialize Repo
+          crave run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs"
+          
+          # 2. Sync Code
+          crave run -- "repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags"
+          
+          # 3. Build ROM
+          crave run -- "source build/envsetup.sh && breakfast lavender && mka bacon"
+
+      - name: Pull and Upload ROM
+        run: |
+          mkdir -p output
+          crave pull out/target/product/lavender/*.zip || true
+          mv *.zip output/ || true
+          
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          files: output/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

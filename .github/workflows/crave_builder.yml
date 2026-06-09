@@ -33,7 +33,8 @@ jobs:
           mkdir -p $HOME/.crave
           echo '{
             "username": "${{ secrets.CRAVE_USERNAME }}",
-            "auth": "${{ secrets.CRAVE_TOKEN }}"
+            "auth": "${{ secrets.CRAVE_TOKEN }}",
+            "name": "MgMgWin" 
           }' > $HOME/.crave/crave.conf
 
       - name: Execute Crave Build Command

@@ -1,10 +1,10 @@
-name: Crave Ultimate Diagnostics Test
+name: Crave Forced Error Capture
 
 on:
   workflow_dispatch:
 
 jobs:
-  diagnose_job:
+  debug_job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -14,11 +14,9 @@ jobs:
         run: |
           curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
           chmod +x crave
-          sudo mv crave /usr/local/bin/crave
 
-      - name: Hardcode Crave Config (Direct Path)
+      - name: Configure Crave Credentials
         run: |
-          # လမ်းကြောင်းကို $HOME မသုံးဘဲ တိုက်ရိုက် လမ်းကြောင်းအပြည့်အစုံနဲ့ ဆောက်ခိုင်းခြင်း
           mkdir -p /home/runner/.crave
           cat << 'EOF' > /home/runner/.crave/crave.conf
           {
@@ -26,15 +24,12 @@ jobs:
             "auth": "${{ secrets.CRAVE_TOKEN }}"
           }
           EOF
-          
-          # ဖိုင်တကယ်ရှိမရှိ စစ်ဆေးခြင်း
-          echo "=== Checking config file location ==="
-          ls -la /home/runner/.crave/crave.conf
-          
-          echo "=== Checking if config is empty ==="
-          cat /home/runner/.crave/crave.conf | grep -q "${{ secrets.CRAVE_USERNAME }}" && echo "Config Status: Loaded Successfully" || echo "Config Status: EMPTY (Secrets Missing!)"
 
-      - name: Run Crave with Debug Mode
+      - name: Force Crave To Speak (Print Version & Help)
         run: |
-          # Config ဖိုင် လမ်းကြောင်းကို အတင်းညွှန်ပြပြီး Debug (အမှားရှာ) စနစ်ဖြင့် Run ခြင်း
-          crave --config /home/runner/.crave/crave.conf devspaces list
+          # Tool ကိုယ်တိုင် အလုပ်လုပ်ပုံကို စစ်ဆေးခြင်း
+          ./crave version
+          
+          echo "=== Attempting to run with config and print internal errors ==="
+          # Config ကို တိုက်ရိုက်ဆွဲဖတ်ပြီး version စစ်ခိုင်းခြင်းဖြင့် error ရှာခြင်း
+          ./crave --config /home/runner/.crave/crave.conf version || echo "Crave Crashed!"

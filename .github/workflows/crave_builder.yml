@@ -13,20 +13,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Crave CLI
+      - name: Install Official Crave CLI
         run: |
-          # 1. Official GitHub Release ထဲက Linux 64-bit Binary စစ်စစ်ကို တိုက်ရိုက်ဆွဲချခြင်း
-          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/crave || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/crave
+          # 1. 404 Error မတက်စေရန် တရားဝင် GitHub Release ရဲ့ အလုပ်လုပ်သော Link မှ တိုက်ရိုက်ဆွဲချခြင်း
+          curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave-cli/main/get_crave.sh && bash get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh
           
-          # 2. မောင်းနှင်ခွင့် (Permission) ပေးခြင်း
+          # တကယ်လို့ အပေါ်ကမရရင် တိုက်ရိုက် binary ကို အောက်ပါအတိုင်း ဆွဲယူပါမည်
+          if [ ! -f crave ] || [ "$(cat crave | grep -c '404')" -gt 0 ]; then
+            echo "Switching to direct stable binary link..."
+            curl -sLo crave https://github.com/craveofficial/crave-cli/releases/latest/download/crave-linux-amd64 || curl -sLo crave https://github.com/accupara/crave/releases/latest/download/crave
+          fi
+          
+          # 2. မောင်းနှင်ခွင့်ပေးပြီး Global Path သို့ ပို့ဆောင်ခြင်း
           chmod +x crave
-          
-          # 3. စနစ်တစ်ခုလုံးက ဘယ်နေရာကမဆို ခေါ်သုံးလို့ရအောင် Global Path ထဲ ရွှေ့ပြောင်းခြင်း
           sudo mv crave /usr/local/bin/crave
+          
+          # 3. ဗားရှင်း အောင်မြင်စွာ ထွက်မထွက် အရင် စစ်ဆေးခြင်း
+          crave version
 
       - name: Configure Crave Credentials
         run: |
-          # 4. Crave Config ဖိုင်ကို တိကျသေချာသော Direct Path ဖြင့် တည်ဆောက်ခြင်း
+          # 4. Config ဖိုင် တည်ဆောက်ခြင်း
           mkdir -p /home/runner/.crave
           cat << 'EOF' > /home/runner/.crave/crave.conf
           {
@@ -37,7 +44,7 @@ jobs:
 
       - name: Execute Crave Build Command
         run: |
-          # 5. Global Command အဖြစ် ကွက်တိ အမိန့်ပေးစေခိုင်းခြင်း
+          # 5. သတ်မှတ်ချက်အတိုင်း ROM စတင် Build ခြင်း
           crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
 
       - name: Download Built ROM from Crave (Pull)

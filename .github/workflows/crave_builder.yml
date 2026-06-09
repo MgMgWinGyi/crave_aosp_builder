@@ -1,4 +1,4 @@
-name: Crave Builder Android 10 with Auto Release
+name: Crave Builder Android 10 redmi note 7 with Auto Release
 
 on:
   workflow_dispatch:
@@ -6,8 +6,8 @@ on:
       command:
         description: 'Crave Target Build Commands'
         required: true
-        # အောက်က စာကြောင်းမှာ crave run ရဲ့ နောက်မှာ --project နာမည် တိုးပေးထားတာကို သတိပြုပါ
-        default: 'crave run --project "LineageOS-17.1-Lavender_MgWin" -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"'
+        # `--project` ကို လုံးဝ ဖြုတ်ချထားပြီး မူရင်း တရားဝင် Command အတိုင်း ပြန်ပြင်ထားပါတယ်
+        default: 'crave run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"'
       device_codename:
         description: 'Device Codename'
         required: true
@@ -30,15 +30,13 @@ jobs:
           sudo mv crave /usr/local/bin/crave
 
       - name: Configure Crave Credentials
+        # JSON အမှားကင်းအောင် မူရင်း ရိုးရှင်းတဲ့ ပုံစံအတိုင်း ပြန်ပြင်ထားပါတယ်
         run: |
           mkdir -p $HOME/.crave
-          cat <<EOF > $HOME/.crave/crave.conf
-          {
+          echo '{
             "username": "${{ secrets.CRAVE_USERNAME }}",
-            "auth": "${{ secrets.CRAVE_TOKEN }}",
-            "name": "MgMgWinGyi"
-          }
-          EOF
+            "auth": "${{ secrets.CRAVE_TOKEN }}"
+          }' > $HOME/.crave/crave.conf
 
       - name: Execute Crave Build Command
         run: |

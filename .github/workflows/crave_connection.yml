@@ -12,8 +12,14 @@ jobs:
 
       - name: Install Crave CLI
         run: |
-          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
+          # ပျက်စီးနေတဲ့ Script ကို မသုံးတော့ဘဲ တရားဝင် Linux 64-bit CLI Binary စစ်စစ်ကို တိုက်ရိုက်ဆွဲခြင်း
+          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/crave || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/crave
+          
+          # ဖိုင်ကို Execute လုပ်ခွင့် (မောင်းနှင်ခွင့်) ပေးခြင်း
           chmod +x crave
+          
+          # System Path ထဲသို့ သေချာပေါက် အလုပ်လုပ်အောင် ပို့ဆောင်ပေးခြင်း
+          sudo mv crave /usr/local/bin/crave
 
       - name: Configure Crave Credentials
         run: |

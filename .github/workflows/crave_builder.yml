@@ -13,28 +13,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Official Crave CLI
-        run: |
-          # 1. Crave တရားဝင် အသုံးပြုခိုင်းထားသော ကမ္ဘာသုံး Master Script အစစ်ဖြင့် ဒေါင်းလုဒ်ဆွဲခြင်း
-          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
-          
-          # 2. ဒေါင်းလုဒ်ဆွဲပြီးသား crave ဖိုင် တကယ်ရှိမရှိ စစ်ဆေးပြီး လမ်းကြောင်းထဲ ပို့ဆောင်ခြင်း
-          if [ -f crave ]; then
-            chmod +x crave
-            sudo mv crave /usr/local/bin/crave
-          else
-            echo "Direct Binary Fallback..."
-            curl -sLo crave https://github.com/accupara/crave/releases/download/0.2-7183/crave-0.2-7183-linux-amd64.bin
-            chmod +x crave
-            sudo mv crave /usr/local/bin/crave
-          fi
-          
-          # 3. ဗားရှင်း အောင်မြင်စွာ ပြသနိုင်ခြင်း ရှိမရှိ စစ်ဆေးခြင်း
-          crave version
-
+      # အဆင့် ၁ - အရင်ဆုံး အကောင့် Config ဖိုင်ကို ကြိုတင် တည်ဆောက်ထားရပါမည်
       - name: Configure Crave Credentials
         run: |
-          # 4. Config ဖိုင် တည်ဆောက်ခြင်း
           mkdir -p /home/runner/.crave
           cat << 'EOF' > /home/runner/.crave/crave.conf
           {
@@ -43,18 +24,37 @@ jobs:
           }
           EOF
 
+      # အဆင့် ၂ - အကောင့်ဖိုင် ရှိပြီးမှ Crave CLI ကို ဒေါင်းလုဒ်ဆွဲ သွင်းယူပါမည်
+      - name: Install Official Crave CLI
+        run: |
+          # တရားဝင် Script ဖြင့် ဒေါင်းလုဒ်ဆွဲခြင်း
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          
+          # သွင်းပြီးသားဖိုင်ကို Global Path ထဲသို့ ရွှေ့ပြောင်းခြင်း
+          if [ -f crave ]; then
+            chmod +x crave
+            sudo mv crave /usr/local/bin/crave
+          fi
+
+      # အဆင့် ၃ - ဗားရှင်း စစ်ဆေးခြင်း
+      - name: Verify Crave Version
+        run: |
+          crave version
+
+      # အဆင့် ၄ - ROM စတင် Build ခြင်း
       - name: Execute Crave Build Command
         run: |
-          # 5. သတ်မှတ်ချက်အတိုင်း ROM စတင် Build ခြင်း
-          crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
+          crave run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
 
+      # အဆင့် ၅ - ထွက်လာသော ROM ကို သိမ်းဆည်းခြင်း
       - name: Download Built ROM from Crave (Pull)
         run: |
           mkdir -p signed-files
-          crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/lineage-17.1-*.zip || crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/*.zip || true
+          crave pull out/target/product/lavender/lineage-17.1-*.zip || crave pull out/target/product/lavender/*.zip || true
           mv out/target/product/lavender/*.zip ./signed-files/ || true
           ls -la ./signed-files/
 
+      # အဆင့် ၆ - Release တင်ခြင်း
       - name: Upload ROM to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:

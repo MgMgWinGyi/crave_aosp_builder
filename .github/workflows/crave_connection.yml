@@ -1,4 +1,4 @@
-name: Crave Connection Test
+name: Crave Strict Connection Test
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ jobs:
 
       - name: Install Crave CLI
         run: |
+          # ဒေါင်းလုဒ်ဆွဲတာ သီးသန့်ခွဲထုတ်ထားပါတယ်
           curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
           chmod +x crave
           sudo mv crave /usr/local/bin/crave
@@ -23,7 +24,12 @@ jobs:
             "username": "${{ secrets.CRAVE_USERNAME }}",
             "auth": "${{ secrets.CRAVE_TOKEN }}"
           }' > $HOME/.crave/crave.conf
+          
+          # သော့ချက်တွေ တကယ်ဝင်မဝင် စစ်ဆေးခြင်း (လုံုံခြုံရေးအရ တစ်ဝက်ပဲ ပြပါလိမ့်မယ်)
+          echo "Checking config structure..."
+          cat $HOME/.crave/crave.conf | grep -o '"username": ".*"' || echo "Username is missing or empty!"
 
-      - name: Test Connection to Crave
+      - name: Test Connection to Crave (Strict)
         run: |
-          crave devspaces list || crave project list || true
+          # Error ကို အတင်းထုတ်ပြခိုင်းသည့် Command
+          crave devspaces list

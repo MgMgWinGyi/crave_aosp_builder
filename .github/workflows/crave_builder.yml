@@ -15,14 +15,18 @@ jobs:
 
       - name: Install Crave CLI
         run: |
-          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/get_crave.sh
+          # 1. Official GitHub Release ထဲက Linux 64-bit Binary စစ်စစ်ကို တိုက်ရိုက်ဆွဲချခြင်း
+          curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/crave || curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave/master/crave
+          
+          # 2. မောင်းနှင်ခွင့် (Permission) ပေးခြင်း
           chmod +x crave
-          # စက်ထဲမှာ သိမ်းဆည်းထားခြင်း
-          sudo cp crave /usr/local/bin/crave
-          sudo mv crave /usr/bin/crave
+          
+          # 3. စနစ်တစ်ခုလုံးက ဘယ်နေရာကမဆို ခေါ်သုံးလို့ရအောင် Global Path ထဲ ရွှေ့ပြောင်းခြင်း
+          sudo mv crave /usr/local/bin/crave
 
-      - name: Configure Crave Credentials (Fixed Path)
+      - name: Configure Crave Credentials
         run: |
+          # 4. Crave Config ဖိုင်ကို တိကျသေချာသော Direct Path ဖြင့် တည်ဆောက်ခြင်း
           mkdir -p /home/runner/.crave
           cat << 'EOF' > /home/runner/.crave/crave.conf
           {
@@ -33,13 +37,13 @@ jobs:
 
       - name: Execute Crave Build Command
         run: |
-          # လက်ရှိ လမ်းကြောင်းအမှန်အတိုင်း အတင်းခိုင်းစေခြင်း
-          /usr/bin/crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
+          # 5. Global Command အဖြစ် ကွက်တိ အမိန့်ပေးစေခိုင်းခြင်း
+          crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
 
       - name: Download Built ROM from Crave (Pull)
         run: |
           mkdir -p signed-files
-          /usr/bin/crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/lineage-17.1-*.zip || /usr/bin/crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/*.zip || true
+          crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/lineage-17.1-*.zip || crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/*.zip || true
           mv out/target/product/lavender/*.zip ./signed-files/ || true
           ls -la ./signed-files/
 

@@ -1,5 +1,6 @@
 # Crave AOSP Builder Configuration for Redmi Note 7 (lavender)
 # Username: MgMgWinGyi | Target ROM: Android 10 (LineageOS 17.1) - Fixed Vendor
+username: MgMgWinGyi   # <-- ဒီစာကြောင်းကို အပေါ်ဆုံးမှာ မဖြစ်မနေ ထည့်ပေးပါ
 
 local_manifests:
   - name: roomservice.xml

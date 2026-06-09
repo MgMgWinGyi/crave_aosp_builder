@@ -13,22 +13,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Official Crave CLI (Fixed 404)
+      - name: Install Official Crave CLI
         run: |
-          # 1. 404 Not Found မဖြစ်စေရန် တရားဝင် stable bash script အစစ်ဖြင့် ဒေါင်းလုဒ်ဆွဲခြင်း
-          curl -s https://raw.githubusercontent.com/craveofficial/crave-cli/main/get_crave.sh | bash || curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash
+          # 1. 404 Error လုံးဝ မတက်စေရန် Crave.io ရဲ့ တရားဝင် Stable Binary ကို အတင်း တိုက်ရိုက် ဆွဲချခြင်း
+          curl -sLo crave https://github.com/accupara/crave/releases/latest/download/crave-linux-amd64 || curl -sLo crave https://github.com/accupara/crave/releases/download/0.2-7183/crave-linux-amd64.bin
           
-          # 2. တကယ်လို့ အပေါ်ကနည်းနဲ့မှ crave ဖိုင် ထွက်မလာရင် အောက်ပါ link အမှန်ကနေ အတင်းဆွဲချပါမည်
-          if [ ! -f crave ]; then
-            echo "Fallback to direct binary download..."
-            curl -sLo crave https://github.com/craveofficial/crave-cli/releases/latest/download/crave-linux-amd64
-          fi
-          
-          # 3. မောင်းနှင်ခွင့်ပေးပြီး စနစ်တစ်ခုလုံး သုံးနိုင်အောင် နေရာချခြင်း
+          # 2. မောင်းနှင်ခွင့် (Permission) ပေးခြင်း
           chmod +x crave
+          
+          # 3. စနစ်တစ်ခုလုံး ဘယ်နေရာကမဆို ခေါ်သုံးနိုင်အောင် ရွှေ့ပြောင်းခြင်း
           sudo mv crave /usr/local/bin/crave
           
-          # 4. ဗားရှင်း အောင်မြင်စွာ ပြသနိုင်ခြင်း ရှိမရှိ စစ်ဆေးခြင်း
+          # 4. ဗားရှင်း မှန်မှန်ကန်ကန် ထွက်မထွက် ချက်ချင်း စစ်ဆေးခြင်း
           crave version
 
       - name: Configure Crave Credentials

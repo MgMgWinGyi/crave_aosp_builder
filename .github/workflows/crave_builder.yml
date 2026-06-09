@@ -13,23 +13,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Official Crave CLI
+      - name: Install Isolated Crave Binary
         run: |
-          # 1. 404 Error မတက်စေရန် တရားဝင် GitHub Release ရဲ့ အလုပ်လုပ်သော Link မှ တိုက်ရိုက်ဆွဲချခြင်း
-          curl -sLo crave https://raw.githubusercontent.com/craveofficial/crave-cli/main/get_crave.sh && bash get_crave.sh || curl -sLo crave https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh
+          # 1. နာမည်မငြိစေရန် တရားဝင် Linux 64-bit Binary စစ်စစ်ကို တိုက်ရိုက် ဆွဲချခြင်း
+          curl -sLo crave-tool https://github.com/craveofficial/crave-cli/releases/latest/download/crave-linux-amd64 || curl -sLo crave-tool https://github.com/accupara/crave/releases/latest/download/crave
           
-          # တကယ်လို့ အပေါ်ကမရရင် တိုက်ရိုက် binary ကို အောက်ပါအတိုင်း ဆွဲယူပါမည်
-          if [ ! -f crave ] || [ "$(cat crave | grep -c '404')" -gt 0 ]; then
-            echo "Switching to direct stable binary link..."
-            curl -sLo crave https://github.com/craveofficial/crave-cli/releases/latest/download/crave-linux-amd64 || curl -sLo crave https://github.com/accupara/crave/releases/latest/download/crave
-          fi
+          # 2. မောင်းနှင်ခွင့်ပေးပြီး Global Path ထဲ ထည့်သွင်းခြင်း
+          chmod +x crave-tool
+          sudo mv crave-tool /usr/local/bin/crave-tool
           
-          # 2. မောင်းနှင်ခွင့်ပေးပြီး Global Path သို့ ပို့ဆောင်ခြင်း
-          chmod +x crave
-          sudo mv crave /usr/local/bin/crave
-          
-          # 3. ဗားရှင်း အောင်မြင်စွာ ထွက်မထွက် အရင် စစ်ဆေးခြင်း
-          crave version
+          # 3. စစ်ဆေးခြင်း (ဒီနေရာမှာ Version ပြကွက် သေချာပေါက် ထွက်ရပါမည်)
+          crave-tool version
 
       - name: Configure Crave Credentials
         run: |
@@ -44,13 +38,13 @@ jobs:
 
       - name: Execute Crave Build Command
         run: |
-          # 5. သတ်မှတ်ချက်အတိုင်း ROM စတင် Build ခြင်း
-          crave --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
+          # 5. သီးသန့်ခွဲထုတ်ထားသော Binary ဖြင့် ROM စတင် Build ခြင်း
+          crave-tool --config /home/runner/.crave/crave.conf run -- "repo init -u https://github.com/LineageOS/android.git -b lineage-17.1 --git-lfs && repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags && source build/envsetup.sh && breakfast lavender && mka bacon"
 
       - name: Download Built ROM from Crave (Pull)
         run: |
           mkdir -p signed-files
-          crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/lineage-17.1-*.zip || crave --config /home/runner/.crave/crave.conf pull out/target/product/lavender/*.zip || true
+          crave-tool --config /home/runner/.crave/crave.conf pull out/target/product/lavender/lineage-17.1-*.zip || crave-tool --config /home/runner/.crave/crave.conf pull out/target/product/lavender/*.zip || true
           mv out/target/product/lavender/*.zip ./signed-files/ || true
           ls -la ./signed-files/
 

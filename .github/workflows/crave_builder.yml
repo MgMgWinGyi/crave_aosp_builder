@@ -1,5 +1,4 @@
 name: Crave Builder Android 10 redmi note 7 with Auto Release
-name: Crave ROM Builder (Permanent Link Fixed)
 
 on:
   workflow_dispatch:
